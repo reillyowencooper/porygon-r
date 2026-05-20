@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Porygon-R · Pokémon TCG Player Rankings</title>
+    <meta name="description" content="Glicko-2 rankings for competitive Pokémon TCG players, computed from tournament data.">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
+    <link rel="stylesheet" href="https://cdn.datatables.net/2.1.8/css/dataTables.dataTables.min.css">
+    <link rel="stylesheet" href="https://cdn.datatables.net/responsive/3.0.3/css/responsive.dataTables.min.css">
+    <link rel="stylesheet" href="style.css?v=3">
+</head>
+<body>
+    <header>
+        <h1>Porygon-R</h1>
+        <p class="subtitle">Pokémon TCG Player Rankings</p>
+    </header>
+
+    <main>
+        <div class="filters">
+            <label>
+                <span>Region</span>
+                <select id="region-filter">
+                    <option value="">All regions</option>
+                    <option value="North America">North America</option>
+                    <option value="Europe">Europe</option>
+                    <option value="Latin America">Latin America</option>
+                    <option value="Oceania">Oceania</option>
+                    <option value="Asia">Asia</option>
+                    <option value="Other">Other</option>
+                </select>
+            </label>
+            <label>
+                <span>Country</span>
+                <select id="country-filter">
+                    <option value="">All countries</option>
+                </select>
+            </label>
+            <p class="filter-hint">Use the search box on the right to find a player by name.</p>
+        </div>
+
+        <table id="leaderboard" class="display responsive nowrap">
+            <thead>
+                <tr>
+                    <th>Rank</th>
+                    <th>Name</th>
+                    <th>Country</th>
+                    <th>Region</th>
+                    <th>Rating</th>
+                    <th>RD</th>
+                    <th>Games</th>
+                    <th>W-L-T</th>
+                </tr>
+            </thead>
+        </table>
+    </main>
+
+    <div id="player-modal" class="modal" hidden>
+        <div class="modal-overlay" data-dismiss></div>
+        <div class="modal-content" role="dialog" aria-labelledby="modal-player-name">
+            <button class="modal-close" data-dismiss aria-label="Close">&times;</button>
+            <div class="modal-header">
+                <h2 id="modal-player-name"></h2>
+                <div class="modal-meta">
+                    <span id="modal-location"></span>
+                    <span class="modal-meta-sep">·</span>
+                    <span id="modal-rank"></span>
+                    <span class="modal-meta-sep">·</span>
+                    <span id="modal-rating"></span>
+                </div>
+                <div class="modal-meta modal-meta-secondary">
+                    <span id="modal-record"></span>
+                    <span class="modal-meta-sep">·</span>
+                    <span id="modal-peak"></span>
+                </div>
+            </div>
+            <section class="modal-chart-section">
+                <h3>Rating over time</h3>
+                <div class="chart-container">
+                    <canvas id="rating-chart"></canvas>
+                </div>
+            </section>
+            <section class="modal-table-section">
+                <h3>Tournament history</h3>
+                <div class="tournament-table-wrapper">
+                    <table id="tournament-history">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Tournament</th>
+                                <th>Finish</th>
+                                <th>Record</th>
+                                <th>Δ Rating</th>
+                                <th>Rating</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </section>
+        </div>
+    </div>
+
+    <footer>
+        <h2>Details</h2>
+        <p>
+            Ratings are computed using <a href="http://www.glicko.net/glicko.html" target="_blank" rel="noopener">Glicko-2</a>
+            (Glickman 2012), with one rating period per tournament and the system constant <code>τ = 0.5</code>.
+            Every player starts at a ranking of <code>1500</code> with rating deviation <code>350</code> and volatility <code>0.06</code>.
+            These constants could change in the future, but are the recommended starting defaults.
+        </p>
+        <p>
+            Player eligibility: at least <strong>35 rounds</strong> played and final rating deviation (<strong>RD</strong>) ≤ <strong>100</strong>.
+            RD is the system's confidence in the rating; lower means more games and more certainty. Players below the eligibility
+            cutoffs are excluded because their rating hasn't converged enough to compare meaningfully against established players.
+            I chose 35 rounds to retain players who have theoretically completed 4 Phase 1s at majors. Banned players are excluded from the ranking system.
+        </p>
+        <p>
+            <strong>Click any player</strong> to see their rating trajectory over time, including the rating-deviation
+            confidence band and a breakdown of every tournament they've played.
+        </p>
+        <p>
+            I plan to update this after every major tournament. Please submit issues or ideas on Github. I hope this is a fun
+            and useful resource for competitive players!
+        </p>
+        <p class="muted">
+            <a href="https://github.com/reillyowencooper/porygon-r" target="_blank" rel="noopener">Source code on GitHub</a>
+        </p>
+    </footer>
+
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="https://cdn.datatables.net/2.1.8/js/dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/responsive/3.0.3/js/dataTables.responsive.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+    <script src="app.js?v=4"></script>
+</body>
+</html>
