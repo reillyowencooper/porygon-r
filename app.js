@@ -28,8 +28,22 @@ async function init() {
     }
 
     initFilters();
+    initCutoffLabel();
     initTable();
     initModalDismiss();
+}
+
+// ---------- cutoff label ----------
+
+function initCutoffLabel() {
+    const cutoff = histories && histories.cutoff_date;
+    if (!cutoff) return;
+    const hint = document.querySelector(".filter-hint");
+    if (!hint) return;
+    const note = document.createElement("span");
+    note.className = "cutoff-note";
+    note.textContent = `Δ since ${cutoff}`;
+    hint.before(note);
 }
 
 // ---------- filters ----------
@@ -109,11 +123,13 @@ function initTable() {
 }
 
 // Renumber the rank column from the Region/Country selection only. The
-// free-text search doesn't redefine the subset.
+// free-text search doesn't redefine the subset. Also renders the F1-style
+// position-change indicator (global delta) when no filter is active.
 function updateRanks() {
     const totalRows = leaderboardData.length;
     const selectedRegion  = $("#region-filter").val();
     const selectedCountry = $("#country-filter").val();
+    const cutoff = histories && histories.cutoff_date;
 
     let subset = leaderboardData;
     if (selectedRegion)  subset = subset.filter(r => r.region  === selectedRegion);
@@ -132,9 +148,33 @@ function updateRanks() {
         const displayRank = fr !== undefined ? fr : d.rank;
         const cellNode = table.cell(rowIdx, 0).node();
         if (!cellNode) return;
-        cellNode.textContent = displayRank;
-        if (isFiltered) {
-            cellNode.setAttribute("title", `Global rank: ${d.rank}`);
+
+        let html = `<span class="rank-num">${displayRank}</span>`;
+        let titleParts = [];
+        if (isFiltered) titleParts.push(`Global rank: ${d.rank}`);
+
+        if (cutoff && !isFiltered) {
+            if (d.prev_rank == null) {
+                html += ` <span class="rank-delta new">NEW</span>`;
+                titleParts.push(`Newly eligible since ${cutoff}`);
+            } else {
+                const delta = d.prev_rank - d.rank;
+                if (delta > 0) {
+                    html += ` <span class="rank-delta up">▲${delta}</span>`;
+                    titleParts.push(`Up ${delta} from #${d.prev_rank} since ${cutoff}`);
+                } else if (delta < 0) {
+                    html += ` <span class="rank-delta down">▼${-delta}</span>`;
+                    titleParts.push(`Down ${-delta} from #${d.prev_rank} since ${cutoff}`);
+                } else {
+                    html += ` <span class="rank-delta same">—</span>`;
+                    titleParts.push(`Unchanged since ${cutoff}`);
+                }
+            }
+        }
+
+        cellNode.innerHTML = html;
+        if (titleParts.length) {
+            cellNode.setAttribute("title", titleParts.join(" · "));
         } else {
             cellNode.removeAttribute("title");
         }

@@ -119,6 +119,17 @@ main {
     color: var(--muted);
     font-size: 12px;
 }
+.cutoff-note {
+    align-self: center;
+    margin-left: auto;
+    color: var(--muted);
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    font-variant-numeric: tabular-nums;
+}
+.cutoff-note + .filter-hint { margin-left: 14px; }
 
 /* ---------- DataTables refinements ---------- */
 .dataTables_wrapper {
@@ -196,7 +207,28 @@ table.dataTable tbody td:nth-child(1) {              /* rank */
     color: var(--muted);
     font-weight: 500;
     font-variant-numeric: tabular-nums;
-    width: 48px;
+    width: 78px;
+    white-space: nowrap;
+}
+.rank-delta {
+    display: inline-block;
+    margin-left: 5px;
+    font-size: 11px;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+    vertical-align: baseline;
+}
+.rank-delta.up   { color: #15803d; }
+.rank-delta.down { color: var(--accent); }
+.rank-delta.same { color: var(--muted-soft); font-weight: 500; }
+.rank-delta.new {
+    background: var(--accent-soft);
+    color: var(--accent);
+    padding: 1px 5px;
+    border-radius: 3px;
+    font-size: 9.5px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
 }
 table.dataTable tbody td:nth-child(2) {              /* name */
     font-weight: 600;
