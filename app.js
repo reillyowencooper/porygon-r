@@ -103,6 +103,9 @@ function initTable() {
     });
 
     table.on("draw", updateRanks);
+    // DataTables' synchronous init already fired its first draw before the
+    // listener above was attached, so paint the deltas once on initial load.
+    updateRanks();
 
     $("#region-filter").on("change", function () {
         const region = $(this).val();
