@@ -11,6 +11,12 @@ let chartInstance = null;
 let leaderboardData = null;
 let histories = null;
 
+// Favorites: client-only state, persisted to localStorage. Bumping the key
+// suffix invalidates stored favorites if the schema ever changes.
+const FAVORITES_KEY = "pkmntcg-favorites-v1";
+let favorites = new Set();
+let favoritesOnly = false;
+
 async function init() {
     try {
         const [lbResp, hiResp] = await Promise.all([
@@ -27,10 +33,62 @@ async function init() {
         return;
     }
 
+    loadFavorites();
     initFilters();
     initCutoffLabel();
+    initFavoritesToggle();
     initTable();
     initModalDismiss();
+}
+
+// ---------- favorites ----------
+
+function loadFavorites() {
+    try {
+        const raw = localStorage.getItem(FAVORITES_KEY);
+        if (raw) favorites = new Set(JSON.parse(raw));
+    } catch (_) { /* corrupt or unavailable; start empty */ }
+}
+
+function saveFavorites() {
+    try {
+        localStorage.setItem(FAVORITES_KEY, JSON.stringify([...favorites]));
+    } catch (_) { /* quota or unavailable; in-memory only */ }
+}
+
+function toggleFavorite(name) {
+    if (favorites.has(name)) favorites.delete(name);
+    else favorites.add(name);
+    saveFavorites();
+    // invalidate() re-runs the column render fn for each row so the star glyph
+    // refreshes; draw(false) re-applies the favorites filter without resetting
+    // the user's current page.
+    if (table) table.rows().invalidate().draw(false);
+}
+
+function initFavoritesToggle() {
+    const pill = document.getElementById("favorites-toggle");
+    if (!pill) return;
+    const updateLabel = () => {
+        pill.setAttribute("aria-pressed", String(favoritesOnly));
+        pill.classList.toggle("is-active", favoritesOnly);
+        pill.querySelector(".favorites-pill-star").textContent = favoritesOnly ? "★" : "☆";
+    };
+    pill.addEventListener("click", () => {
+        favoritesOnly = !favoritesOnly;
+        updateLabel();
+        if (table) table.draw();
+    });
+
+    // Custom DataTables filter — applied only to our table, and only when
+    // favoritesOnly is on. dataIndex maps directly to leaderboardData since
+    // we pass the array as the table's data source.
+    $.fn.dataTable.ext.search.push(function (settings, _data, dataIndex) {
+        if (settings.nTable.id !== "leaderboard") return true;
+        if (!favoritesOnly) return true;
+        const row = leaderboardData[dataIndex];
+        return !!row && favorites.has(row.name);
+    });
 }
 
 // ---------- cutoff label ----------
@@ -83,7 +141,16 @@ function initTable() {
         data: leaderboardData,
         columns: [
             { data: "rank" },
-            { data: "name" },
+            {
+                data: "name",
+                render: (name) => {
+                    const isFav = favorites.has(name);
+                    const cls   = isFav ? "fav-star is-fav" : "fav-star";
+                    const glyph = isFav ? "★" : "☆";
+                    const label = isFav ? "Remove from favorites" : "Add to favorites";
+                    return `<button type="button" class="${cls}" data-name="${escapeHtml(name)}" aria-label="${label}" title="${label}">${glyph}</button>${escapeHtml(name)}`;
+                },
+            },
             { data: "country" },
             { data: "region" },
             { data: "rating", render: r => r.toFixed(2) },
@@ -118,6 +185,14 @@ function initTable() {
         table.column(2).search(country ? `^${country}$` : "", true, false).draw();
     });
 
+    // Star click → toggle favorite (must run before the row handler so we can
+    // suppress modal-open via stopPropagation).
+    $("#leaderboard tbody").on("click", ".fav-star", function (e) {
+        e.stopPropagation();
+        const name = this.getAttribute("data-name");
+        if (name) toggleFavorite(name);
+    });
+
     // Row click → modal
     $("#leaderboard tbody").on("click", "tr", function () {
         const rowData = table.row(this).data();
@@ -137,6 +212,7 @@ function updateRanks() {
     let subset = leaderboardData;
     if (selectedRegion)  subset = subset.filter(r => r.region  === selectedRegion);
     if (selectedCountry) subset = subset.filter(r => r.country === selectedCountry);
+    if (favoritesOnly)   subset = subset.filter(r => favorites.has(r.name));
 
     if (subset.length === 0) return;
     const isFiltered = subset.length < totalRows;

@@ -131,6 +131,41 @@ main {
 }
 .cutoff-note + .filter-hint { margin-left: 14px; }
 
+.favorites-pill {
+    align-self: flex-end;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 14px;
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    background: var(--bg-card);
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--fg-soft);
+    cursor: pointer;
+    transition: border-color 0.12s, background 0.12s, color 0.12s, box-shadow 0.12s;
+}
+.favorites-pill:hover { border-color: var(--muted-soft); }
+.favorites-pill:focus {
+    outline: none;
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-soft);
+}
+.favorites-pill .favorites-pill-star {
+    font-size: 14px;
+    line-height: 1;
+    color: var(--muted-soft);
+    transition: color 0.12s;
+}
+.favorites-pill.is-active {
+    background: var(--accent-soft);
+    border-color: var(--accent);
+    color: var(--accent);
+}
+.favorites-pill.is-active .favorites-pill-star { color: var(--accent); }
+
 /* ---------- DataTables refinements ---------- */
 .dataTables_wrapper {
     background: var(--bg-card);
@@ -234,6 +269,27 @@ table.dataTable tbody td:nth-child(2) {              /* name */
     font-weight: 600;
     color: var(--fg);
 }
+.fav-star {
+    display: inline-block;
+    width: 22px;
+    height: 22px;
+    margin-right: 8px;
+    padding: 0;
+    border: none;
+    background: transparent;
+    color: var(--muted-soft);
+    font-size: 16px;
+    line-height: 22px;
+    text-align: center;
+    cursor: pointer;
+    vertical-align: middle;
+    border-radius: 4px;
+    transition: color 0.12s, background 0.12s, transform 0.08s;
+}
+.fav-star:hover { color: var(--accent); background: var(--accent-soft); }
+.fav-star:active { transform: scale(0.92); }
+.fav-star.is-fav { color: var(--accent); }
+.fav-star.is-fav:hover { background: var(--accent-soft); }
 table.dataTable tbody td:nth-child(3) {              /* country */
     color: var(--muted);
     font-size: 12.5px;
